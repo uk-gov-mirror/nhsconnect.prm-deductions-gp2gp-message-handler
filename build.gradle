@@ -17,6 +17,9 @@ repositories {
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-activemq'
+	implementation 'com.sun.mail:javax.mail:1.6.2'
+	implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.11.1'
+	implementation 'com.fasterxml.woodstox:woodstox-core:5.1.0'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.hamcrest:hamcrest:2.2'
 	spotbugsPlugins 'com.h3xstream.findsecbugs:findsecbugs-plugin:1.11.0'
