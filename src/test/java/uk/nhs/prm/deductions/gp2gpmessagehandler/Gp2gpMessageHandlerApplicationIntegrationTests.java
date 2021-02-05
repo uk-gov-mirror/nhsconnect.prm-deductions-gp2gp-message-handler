@@ -20,7 +20,7 @@ import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest
-class Gp2gpMessageHandlerApplicationTests {
+class Gp2gpMessageHandlerApplicationIntegrationTests {
 	@Autowired
 	JmsTemplate jmsTemplate;
 

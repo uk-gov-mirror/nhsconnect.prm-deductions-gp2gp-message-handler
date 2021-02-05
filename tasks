@@ -118,12 +118,18 @@ case "${command}" in
   build)
       dojo "./tasks _build"
       ;;
-  _test)
+  _test_integration)
+      gradle test --tests '*IntegrationTests'
+      ;;
+  test_integration)
+      configure_local_envs
+      dojo -c Dojofile-itest "./tasks _test_integration"
+      ;;
+  _test_unit)
       gradle test
       ;;
-  test)
-      configure_local_envs
-      dojo -c Dojofile-itest "./tasks _test"
+  test_unit)
+      dojo "./tasks _test_unit"
       ;;
   _test_coverage)
       gradle jacocoTestCoverageVerification
