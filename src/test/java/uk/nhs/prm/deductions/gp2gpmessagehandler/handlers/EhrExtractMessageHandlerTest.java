@@ -17,6 +17,7 @@ import javax.jms.JMSException;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -67,9 +68,9 @@ public class EhrExtractMessageHandlerTest {
         return envelope;
     }
 
-    private ActiveMQBytesMessage getActiveMQBytesMessage() throws JMSException {
+    private ActiveMQBytesMessage getActiveMQBytesMessage(String message) throws JMSException {
         ActiveMQBytesMessage bytesMessage = new ActiveMQBytesMessage();
-        bytesMessage.writeBytes(new byte[10]);
+        bytesMessage.writeBytes(message.getBytes(StandardCharsets.UTF_8));
         bytesMessage.reset();
         return bytesMessage;
     }
@@ -82,8 +83,8 @@ public class EhrExtractMessageHandlerTest {
     @Test
     public void shouldPutSmallHealthRecordsOnJSQueue() throws JMSException {
         SOAPEnvelope envelope = getSoapEnvelope("cid:no-attachments");
-        ActiveMQBytesMessage bytesMessage = getActiveMQBytesMessage();
-        ParsedMessage parsedMessage = new ParsedMessage(envelope, null, bytesMessage, null);
+        ActiveMQBytesMessage bytesMessage = getActiveMQBytesMessage("test");
+        ParsedMessage parsedMessage = new ParsedMessage(envelope, null,"test");
 
         messageHandler.handleMessage(parsedMessage);
         verify(mockJmsTemplate, only()).convertAndSend(outboundQueue, bytesMessage);
@@ -92,8 +93,8 @@ public class EhrExtractMessageHandlerTest {
     @Test
     public void shouldNotPutLargeHealthRecordsOnJSQueue() throws JMSException {
         SOAPEnvelope envelope = getSoapEnvelope("mid:attachment");
-        ActiveMQBytesMessage bytesMessage = getActiveMQBytesMessage();
-        ParsedMessage parsedMessage = new ParsedMessage(envelope, null, bytesMessage, null);
+        ActiveMQBytesMessage bytesMessage = getActiveMQBytesMessage("test");
+        ParsedMessage parsedMessage = new ParsedMessage(envelope, null,"test");
 
         messageHandler.handleMessage(parsedMessage);
         verify(mockJmsTemplate, never()).convertAndSend("outboundQueue", bytesMessage);
@@ -102,7 +103,7 @@ public class EhrExtractMessageHandlerTest {
     @Test
     public void shouldCallGPToRepoToSendContinueMessageForLargeHealthRecords() throws MalformedURLException, URISyntaxException {
         SOAPEnvelope envelope = getSoapEnvelope("mid:attachment");
-        ParsedMessage parsedMessage = new ParsedMessage(envelope, null, null, null);
+        ParsedMessage parsedMessage = new ParsedMessage(envelope, null,null);
 
         messageHandler.handleMessage(parsedMessage);
         verify(gpToRepoClient).sendContinueMessage(ehrExtractMessageId, conversationId);
@@ -112,8 +113,9 @@ public class EhrExtractMessageHandlerTest {
     public void shouldPutLargeMessageOnUnhandledQueueWhenGPToRepoCallThrows() throws JMSException, MalformedURLException, URISyntaxException {
         SOAPEnvelope envelope = getSoapEnvelope("mid:attachment");
         RuntimeException expectedError = new RuntimeException("Failed to send continue message");
-        ActiveMQBytesMessage bytesMessage = getActiveMQBytesMessage();
-        ParsedMessage parsedMessage = new ParsedMessage(envelope, null, bytesMessage, null);
+        ActiveMQBytesMessage bytesMessage = getActiveMQBytesMessage("test");
+
+        ParsedMessage parsedMessage = new ParsedMessage(envelope, null,"test");
         doThrow(expectedError).when(gpToRepoClient).sendContinueMessage(ehrExtractMessageId, conversationId);
 
         messageHandler.handleMessage(parsedMessage);
@@ -124,8 +126,7 @@ public class EhrExtractMessageHandlerTest {
     public void shouldCallEhrRepoToStoreMessageForLargeHealthRecords() throws JMSException, HttpException {
         SOAPEnvelope envelope = getSoapEnvelope("mid:attachment");
         EhrExtractMessageWrapper ehrExtractMessageWrapper = getMessageContent("1234567890");
-        ActiveMQBytesMessage bytesMessage = getActiveMQBytesMessage();
-        ParsedMessage parsedMessage = new ParsedMessage(envelope, ehrExtractMessageWrapper, bytesMessage, null);
+        ParsedMessage parsedMessage = new ParsedMessage(envelope, ehrExtractMessageWrapper, null);
 
         messageHandler.handleMessage(parsedMessage);
         verify(ehrRepoService).storeMessage(parsedMessage);
@@ -135,8 +136,8 @@ public class EhrExtractMessageHandlerTest {
     public void shouldPutLargeMessageOnUnhandledQueueWhenEhrRepoCallThrows() throws JMSException, HttpException {
         SOAPEnvelope envelope = getSoapEnvelope("mid:attachment");
         EhrExtractMessageWrapper ehrExtractMessageWrapper = getMessageContent("1234567890");
-        ActiveMQBytesMessage bytesMessage = getActiveMQBytesMessage();
-        ParsedMessage parsedMessage = new ParsedMessage(envelope, ehrExtractMessageWrapper, bytesMessage, null);
+        ActiveMQBytesMessage bytesMessage = getActiveMQBytesMessage("test");
+        ParsedMessage parsedMessage = new ParsedMessage(envelope, ehrExtractMessageWrapper, "test");
 
         HttpException expectedError = new HttpException();
         doThrow(expectedError).when(ehrRepoService).storeMessage(parsedMessage);
