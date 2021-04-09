@@ -54,12 +54,6 @@ public class JmsConsumerIntegrationTest {
 
     private TestDataLoader dataLoader = new TestDataLoader();
 
-    @SuppressFBWarnings(value = "UPM_UNCALLED_PRIVATE_METHOD")
-    private ActiveMQBytesMessage getActiveMQBytesMessage(String content) throws JMSException {
-        byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
-        return getActiveMQBytesMessage(bytes);
-    }
-
     private ActiveMQBytesMessage getActiveMQBytesMessage(byte[] bytes) throws JMSException {
         ActiveMQBytesMessage message = new ActiveMQBytesMessage();
         message.writeBytes(bytes);
